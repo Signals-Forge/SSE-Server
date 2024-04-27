@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  sse-server:
+    build: 
+      context: ./sse_server
+    network_mode: host
+    # networks:
+    #   - my-sse-network
+    ports:
+      - "8000:8000"       
+    
+# networks:
+#   my-sse-network:
+    # driver: host
+
