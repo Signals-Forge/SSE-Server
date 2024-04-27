@@ -1,0 +1,43 @@
+name: Deploy to Cloud Run from Source
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  PROJECT_ID: naturevive-a8549 # TODO: update Google Cloud project id
+  SERVICE: sseserver # TODO: update Cloud Run service name
+  REGION: asia-south1 # TODO: update Cloud Run service region
+
+jobs:
+  deploy:
+    # Add 'id-token' with the intended permissions for workload identity federation
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Google Auth
+        id: auth
+        #uses: 'google-github-actions/auth@v0'
+        uses: 'google-github-actions/auth@v2.1.2'
+        with:
+          workload_identity_provider: '${{ secrets.WIF_PROVIDER }}' # e.g. - projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+          service_account: '${{ secrets.SA_EMAIL }}' # e.g. - my-service-account@my-project.iam.gserviceaccount.com
+
+      - name: Deploy to Cloud Run
+        id: deploy                      
+        uses: google-github-actions/deploy-cloudrun@v2.4.0
+        with:
+          service: ${{ env.SERVICE }}
+          region: ${{ env.REGION }}
+          # NOTE: If required, update to the appropriate source folder
+          source: ./
+
+      # If required, use the Cloud Run url output in later steps
+      - name: Show Output
+        run: echo ${{ steps.deploy.outputs.url }}
